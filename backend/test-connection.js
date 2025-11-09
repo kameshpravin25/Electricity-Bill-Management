@@ -54,8 +54,8 @@ try {
 }
 
 const dbConfig = {
-  user: process.env.DB_USER || 'chummame',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || 'your_db_username',
+  password: process.env.DB_PASSWORD || 'your_password',
   connectString: process.env.DB_CONNECT_STRING || 'localhost:1521/XE'
 };
 
