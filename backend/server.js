@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 // Initialize Oracle Client
 try {
   const fs = require('fs');
-    const defaultParent = 'D:\\application_software\\instantclient-basic-windows.x64-19.28.0.0.0dbru';
+    const defaultParent = 'Oracle_instand_client_path';
     const basePath = process.env.ORACLE_LIB_DIR || defaultParent;
     const preferredSubdirs = ['instantclient_21_19', 'instantclient_19_28', 'instantclient'];
     let libDir = basePath;
@@ -64,8 +64,8 @@ app.use(cors());
 app.use(express.json());
 
 const dbConfig = {
-  user: process.env.DB_USER || 'chummame',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || 'your_db_username',
+  password: process.env.DB_PASSWORD || 'your_password',
   connectString: process.env.DB_CONNECT_STRING || 'localhost:1521/XE'
 };
 
