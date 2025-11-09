@@ -34,7 +34,7 @@ ORACLE_LIB_DIR=C:\path\to\instantclient_19_28   # or the parent folder that cont
 
 1. **Oracle Database** running and accessible
 2. **Oracle Instant Client** installed
-   - Location: `D:\application_software\instantclient-basic-windows.x64-19.28.0.0.0dbru\instantclient_19_28`
+   - Location: `Oracle_instant_client_path`
 3. **Node.js** (v18 or higher)
 4. **npm** or **yarn**
 
