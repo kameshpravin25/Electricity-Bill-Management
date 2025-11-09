@@ -42,15 +42,16 @@ ORACLE_LIB_DIR=C:\path\to\instantclient_19_28   # or the parent folder that cont
 
 ### 1) Backend env
 
-Create `backend/.env` using these keys:
+Create `backend/.env` by copying `backend/.env.example` and filling in values. Example placeholders:
 
 ```
 PORT=3000
-ORACLE_LIB_DIR=D:\application_software\instantclient-basic-windows.x64-19.28.0.0.0dbru\instantclient_19_28
-DB_USER=chummame
-DB_PASSWORD=password
-DB_CONNECT_STRING=localhost:1521/XE
-JWT_SECRET=replace_me
+# ORACLE_LIB_DIR: path to the instantclient folder (contains oci.dll) or its parent
+ORACLE_LIB_DIR=C:\path\to\instantclient_19_28
+DB_USER=<your_db_user>
+DB_PASSWORD=<your_db_password>
+DB_CONNECT_STRING=<host:port/servicename>  # e.g. localhost:1521/XE
+JWT_SECRET=<your_jwt_secret>
 ```
 
 ### 2) Install
@@ -183,3 +184,4 @@ This project is for educational purposes as part of DBMS course.
 Created for Electricity Bill Management System - DBMS Project
 
 
+"# Electricity-Bill-Management" 
