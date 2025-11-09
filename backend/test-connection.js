@@ -5,7 +5,7 @@ require('dotenv').config();
 // Initialize Oracle Client
 try {
   const fs = require('fs');
-  const defaultParent = 'D:\\application_software\\instantclient-basic-windows.x64-19.28.0.0.0dbru';
+  const defaultParent = 'Oracle_instant_client_path';
   const basePath = process.env.ORACLE_LIB_DIR || defaultParent;
   const preferredSubdirs = ['instantclient_21_19', 'instantclient_19_28', 'instantclient'];
   let libDir = basePath;
