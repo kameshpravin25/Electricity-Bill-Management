@@ -1,21 +1,22 @@
 // backend/create-bill-tables.js
+require('dotenv').config();
 const oracledb = require('oracledb');
 
-// Initialize Oracle Client
+// Initialize Oracle Client using ORACLE_LIB_DIR from environment when available
 try {
-  oracledb.initOracleClient({
-    libDir: 'D:\\application_software\\instantclient-basic-windows.x64-19.28.0.0.0dbru\\instantclient_19_28'
-  });
-  console.log('✅ Oracle Client initialized successfully');
+  const libDir = process.env.ORACLE_LIB_DIR || 'D:\\application_software\\instantclient-basic-windows.x64-19.28.0.0.0dbru\\instantclient_19_28';
+  oracledb.initOracleClient({ libDir });
+  console.log('✅ Oracle Client initialized successfully (libDir=' + libDir + ')');
 } catch (e) {
   console.error('❌ Oracle Client initialization failed:', e.message || e);
   process.exit(1);
 }
 
+// Read DB credentials from environment variables. Keep sensitive values out of source.
 const dbConfig = {
-  user: 'chummame',
-  password: 'password',
-  connectString: 'localhost:1521/XE'
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  connectString: process.env.DB_CONNECT_STRING
 };
 
 async function createTables() {
