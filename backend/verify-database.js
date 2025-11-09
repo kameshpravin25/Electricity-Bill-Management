@@ -5,7 +5,7 @@ require('dotenv').config();
 // Initialize Oracle Client
 try {
   const fs = require('fs');
-  const basePath = process.env.ORACLE_LIB_DIR || 'D:\application_software\instantclient-basic-windows.x64-19.28.0.0.0dbru';
+  const basePath = process.env.ORACLE_LIB_DIR || 'Oracle_instant_client_path';
   const subPath = basePath + '\\instantclient_19_28';
   let libDir = basePath;
   
@@ -21,8 +21,8 @@ try {
 }
 
 const dbConfig = {
-  user: process.env.DB_USER || 'chummame',
-  password: process.env.DB_PASSWORD || 'password',
+  user: process.env.DB_USER || 'your_db_username',
+  password: process.env.DB_PASSWORD || 'your_password',
   connectString: process.env.DB_CONNECT_STRING || 'localhost:1521/XE'
 };
 
