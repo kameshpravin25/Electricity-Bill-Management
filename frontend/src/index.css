@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Exclude specific elements from transitions for better performance */
+button, a, input, textarea, select {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, transform, box-shadow;
+}
+

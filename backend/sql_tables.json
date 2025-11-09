@@ -1,0 +1,154 @@
+{
+    "tables": [
+      {
+        "name": "Customer",
+        "columns": [
+          {"Cust_ID": "NUMBER PRIMARY KEY"},
+          {"FirstName": "VARCHAR2(50)"},
+          {"MiddleName": "VARCHAR2(50)"},
+          {"LastName": "VARCHAR2(50)"},
+          {"Adhaar": "VARCHAR2(20)"},
+          {"Email": "VARCHAR2(100)"},
+          {"ContactNo": "VARCHAR2(20)"},
+          {"Address": "VARCHAR2(255)"}
+        ]
+      },
+      {
+        "name": "Invoice",
+        "columns": [
+          {"Invoice_ID": "NUMBER PRIMARY KEY"},
+          {"Invoice_Date": "DATE"},
+          {"Base_Amount": "NUMBER"},
+          {"Tax": "NUMBER"},
+          {"Grand_Total": "NUMBER"},
+          {"Cust_ID": "NUMBER"},
+          {"Status": "VARCHAR2(20)"}
+        ],
+        "foreign_keys": [
+          {"Cust_ID": "REFERENCES Customer(Cust_ID)"}
+        ]
+      },
+      {
+        "name": "Payment",
+        "columns": [
+          {"Payment_ID": "NUMBER PRIMARY KEY"},
+          {"Invoice_ID": "NUMBER"},
+          {"Amount_Paid": "NUMBER"},
+          {"Payment_Date": "DATE"},
+          {"Payment_Mode": "VARCHAR2(50)"},
+          {"Transaction_Ref": "VARCHAR2(50)"},
+          {"Units_Consumed": "NUMBER"}
+        ],
+        "foreign_keys": [
+          {"Invoice_ID": "REFERENCES Invoice(Invoice_ID)"}
+        ]
+      },
+      {
+        "name": "Feedback",
+        "columns": [
+          {"Feedback_ID": "NUMBER PRIMARY KEY"},
+          {"Cust_ID": "NUMBER"},
+          {"Invoice_ID": "NUMBER"},
+          {"Feedback_Text": "VARCHAR2(255)"},
+          {"Date": "DATE"},
+          {"Rating": "NUMBER"}
+        ],
+        "foreign_keys": [
+          {"Cust_ID": "REFERENCES Customer(Cust_ID)"},
+          {"Invoice_ID": "REFERENCES Invoice(Invoice_ID)"}
+        ]
+      },
+      {
+        "name": "Admin",
+        "columns": [
+          {"Admin_ID": "NUMBER PRIMARY KEY"},
+          {"Admin_Name": "VARCHAR2(100)"},
+          {"Email": "VARCHAR2(100)"}
+        ]
+      },
+      {
+        "name": "Roles",
+        "columns": [
+          {"Role_ID": "NUMBER PRIMARY KEY"},
+          {"Role_Name": "VARCHAR2(50)"},
+          {"Role_Description": "VARCHAR2(255)"}
+        ]
+      },
+      {
+        "name": "Staff",
+        "columns": [
+          {"Staff_ID": "NUMBER PRIMARY KEY"},
+          {"FirstName": "VARCHAR2(50)"},
+          {"MiddleName": "VARCHAR2(50)"},
+          {"LastName": "VARCHAR2(50)"},
+          {"Years_Of_Experience": "NUMBER"},
+          {"Adhaar": "VARCHAR2(20)"},
+          {"Admin_ID": "NUMBER"},
+          {"Email": "VARCHAR2(100)"},
+          {"PhoneNumber": "NUMBER"},
+          {"Date_Of_Joining": "DATE"}
+        ],
+        "foreign_keys": [
+          {"Admin_ID": "REFERENCES Admin(Admin_ID)"}
+        ]
+      },
+      {
+        "name": "Login",
+        "columns": [
+          {"Login_ID": "NUMBER PRIMARY KEY"},
+          {"Username": "VARCHAR2(50)"},
+          {"Password": "VARCHAR2(100)"},
+          {"Staff_ID": "NUMBER"},
+          {"Role_ID": "NUMBER"}
+        ],
+        "foreign_keys": [
+          {"Staff_ID": "REFERENCES Staff(Staff_ID)"},
+          {"Role_ID": "REFERENCES Roles(Role_ID)"}
+        ]
+      },
+      {
+        "name": "Tariff",
+        "columns": [
+          {"Tariff_ID": "NUMBER PRIMARY KEY"},
+          {"Description": "VARCHAR2(100)"},
+          {"Rate_Per_Unit": "NUMBER"},
+          {"Effective_From": "DATE"},
+          {"Effective_To": "DATE"}
+        ]
+      },
+      {
+        "name": "Meter",
+        "columns": [
+          {"Meter_ID": "NUMBER PRIMARY KEY"},
+          {"InstallationDate": "DATE"},
+          {"MeterType": "VARCHAR2(50)"},
+          {"City": "VARCHAR2(50)"},
+          {"Pincode": "NUMBER"},
+          {"Street": "VARCHAR2(100)"},
+          {"HouseNo": "VARCHAR2(10)"},
+          {"State": "VARCHAR2(50)"},
+          {"Account_ID": "NUMBER"},
+          {"Tariff_ID": "NUMBER"}
+        ],
+        "foreign_keys": [
+          {"Tariff_ID": "REFERENCES Tariff(Tariff_ID)"}
+        ]
+      },
+      {
+        "name": "Bill",
+        "columns": [
+          {"Bill_ID": "NUMBER PRIMARY KEY"},
+          {"Issue_Date": "DATE"},
+          {"Due_Date": "DATE"},
+          {"Account_ID": "NUMBER"},
+          {"Meter_ID": "NUMBER"},
+          {"Rate_Per_Unit": "NUMBER"},
+          {"Status": "NUMBER"}
+        ],
+        "foreign_keys": [
+          {"Meter_ID": "REFERENCES Meter(Meter_ID)"}
+        ]
+      }
+    ]
+  }
+  

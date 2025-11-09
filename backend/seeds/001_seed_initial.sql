@@ -1,0 +1,58 @@
+-- Seed data derived from backend/command.json
+
+-- Roles
+INSERT INTO Roles(Role_ID, Role_Name, Role_Description) VALUES (1, 'admin', 'System administrator');
+INSERT INTO Roles(Role_ID, Role_Name, Role_Description) VALUES (2, 'customer', 'Customer user');
+
+-- Admin
+INSERT INTO Admin(Admin_ID, Admin_Name, Email) VALUES (100, 'System Admin', 'admin@example.com');
+
+-- Staff and Login
+INSERT INTO Staff(Staff_ID, FirstName, MiddleName, LastName, Years_Of_Experience, Adhaar, Admin_ID, Email, PhoneNumber, Date_Of_Joining)
+VALUES (200, 'Admin', NULL, 'User', 5, '000000000000', 100, 'admin@example.com', 9999999999, TO_DATE('2025-01-01','YYYY-MM-DD'));
+
+INSERT INTO Login(Login_ID, Username, Password, Staff_ID, Role_ID)
+VALUES (300, 'admin', 'Admin@123', 200, 1);
+
+-- Customers
+INSERT INTO Customer(Cust_ID, FirstName, MiddleName, LastName, Adhaar, Email, ContactNo, Address)
+VALUES (1000, 'Raju', NULL, 'Kumar', '123412341234', 'raju@example.com', '9876543210', '12, MG Road, Bangalore');
+INSERT INTO Customer(Cust_ID, FirstName, MiddleName, LastName, Adhaar, Email, ContactNo, Address)
+VALUES (1001, 'Suma', NULL, 'Lakshmi', '432143214321', 'suma@example.com', '9876501234', '34, Park Street, Chennai');
+
+-- CustomerAuth (credentials)
+INSERT INTO CustomerAuth(Auth_ID, Cust_ID, Username, PasswordHash, Created_At)
+VALUES (5000, 1000, 'raju', 'Cust1@123', SYSDATE);
+INSERT INTO CustomerAuth(Auth_ID, Cust_ID, Username, PasswordHash, Created_At)
+VALUES (5001, 1001, 'suma', 'Cust2@123', SYSDATE);
+
+-- Tariff
+INSERT INTO Tariff(Tariff_ID, Description, Rate_Per_Unit, Effective_From, Effective_To)
+VALUES (10, 'Residential Basic', 6.5, TO_DATE('2025-01-01','YYYY-MM-DD'), TO_DATE('2026-01-01','YYYY-MM-DD'));
+
+-- Meter
+INSERT INTO Meter(Meter_ID, InstallationDate, MeterType, City, Pincode, Street, HouseNo, State, Account_ID, Tariff_ID)
+VALUES (4000, TO_DATE('2023-05-10','YYYY-MM-DD'), 'Smart', 'Bangalore', 560001, 'MG Road', '12', 'Karnataka', 1000, 10);
+INSERT INTO Meter(Meter_ID, InstallationDate, MeterType, City, Pincode, Street, HouseNo, State, Account_ID, Tariff_ID)
+VALUES (4001, TO_DATE('2024-02-20','YYYY-MM-DD'), 'Smart', 'Chennai', 600001, 'Park Street', '34', 'Tamil Nadu', 1001, 10);
+
+-- Bill & Invoice & Payment
+-- Unpaid invoice path (Raju)
+INSERT INTO Bill(Bill_ID, Issue_Date, Due_Date, Account_ID, Meter_ID, Rate_Per_Unit, Status)
+VALUES (7000, TO_DATE('2025-10-01','YYYY-MM-DD'), TO_DATE('2025-10-20','YYYY-MM-DD'), 1000, 4000, 6.5, 0);
+
+INSERT INTO Invoice(Invoice_ID, Invoice_Date, Base_Amount, Tax, Grand_Total, Cust_ID, Status)
+VALUES (8000, TO_DATE('2025-10-01','YYYY-MM-DD'), 1000, 50, 1050, 1000, 'Pending');
+
+-- Paid invoice path (Suma)
+INSERT INTO Bill(Bill_ID, Issue_Date, Due_Date, Account_ID, Meter_ID, Rate_Per_Unit, Status)
+VALUES (7001, TO_DATE('2025-09-01','YYYY-MM-DD'), TO_DATE('2025-09-20','YYYY-MM-DD'), 1001, 4001, 6.5, 1);
+
+INSERT INTO Invoice(Invoice_ID, Invoice_Date, Base_Amount, Tax, Grand_Total, Cust_ID, Status)
+VALUES (8001, TO_DATE('2025-09-01','YYYY-MM-DD'), 1500, 75, 1575, 1001, 'Paid');
+
+INSERT INTO Payment(Payment_ID, Invoice_ID, Amount_Paid, Payment_Date, Payment_Mode, Transaction_Ref, Units_Consumed)
+VALUES (9000, 8001, 1575, TO_DATE('2025-09-05','YYYY-MM-DD'), 'UPI', 'TXN-PAID-9000', 230);
+
+
+
