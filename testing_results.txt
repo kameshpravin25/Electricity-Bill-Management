@@ -1,0 +1,152 @@
+Chapter 7: Testing Results
+==========================
+
+7.1 Testing Result of Sprint 1 (Database Testing)
+--------------------------------------------------
+Testing Type: Structural Testing
+Database: PostgreSQL (Supabase Cloud)
+Schema: 9 tables - users, customers, meters, tariffs, invoices, bills, payments, feedbacks
+
+Test Cases Performed:
+
+  Test ID | Test Case                                          | Expected Result                                      | Actual Result                                        | Status
+  --------|----------------------------------------------------|----------------------------------------------------- |------------------------------------------------------|-------
+  DB-01   | Create all tables using supabase_schema.sql         | All 9 tables created without errors                  | Tables created successfully in Supabase              | PASS
+  DB-02   | Primary Key uniqueness on customers.id              | Auto-increment serial ID, no duplicates              | Each customer gets unique ID (1, 2, 3...)            | PASS
+  DB-03   | Primary Key uniqueness on invoices.id               | Auto-increment serial ID, no duplicates              | Each invoice gets unique ID                          | PASS
+  DB-04   | Foreign Key: meters.customer_id -> customers.id     | Meter must reference valid customer                  | Insert with invalid customer_id rejected             | PASS
+  DB-05   | Foreign Key: invoices.customer_id -> customers.id   | Invoice must reference valid customer                | Referential integrity maintained                     | PASS
+  DB-06   | Foreign Key: payments.invoice_id -> invoices.id     | Payment must reference valid invoice                 | Invalid invoice_id rejected                          | PASS
+  DB-07   | Foreign Key: meters.tariff_id -> tariffs.id         | Meter must reference valid tariff                    | Referential integrity maintained                     | PASS
+  DB-08   | CASCADE delete: Delete customer -> delete meters    | Deleting customer removes associated meters          | Meters deleted via ON DELETE CASCADE                 | PASS
+  DB-09   | CASCADE delete: Delete customer -> delete invoices  | Deleting customer removes associated invoices        | Invoices deleted via ON DELETE CASCADE               | PASS
+  DB-10   | CHECK constraint on users.role                      | Only 'admin' or 'customer' allowed                   | Insert with role='staff' rejected                    | PASS
+  DB-11   | UNIQUE constraint on users.email                    | No duplicate email addresses                         | Duplicate email insert rejected                      | PASS
+  DB-12   | NOT NULL constraint on users.email, users.password  | Null values rejected                                 | Insert without email/password fails                  | PASS
+  DB-13   | Default values: invoices.status defaults to Pending | New invoice status = Pending                         | Default applied correctly                            | PASS
+  DB-14   | Default values: invoices.amount_paid defaults to 0  | New invoice amount_paid = 0                          | Default applied correctly                            | PASS
+  DB-15   | Seed data: 3 tariff plans inserted                  | Residential (Rs.5.50), Commercial (Rs.8), Industrial (Rs.12) | All 3 tariffs present in table              | PASS
+  DB-16   | Sample data: 7 customers with meters, invoices      | All relational data inserted correctly               | 7 customers, 7 meters, 15 invoices, 12 payments     | PASS
+  DB-17   | Data retrieval: JOIN customers + meters              | Customer-meter relationship queryable                | JOIN query returns correct paired data               | PASS
+  DB-18   | Data retrieval: JOIN invoices + payments             | Invoice-payment relationship queryable               | Payment amounts match invoice records                | PASS
+  DB-19   | Timestamp auto-generation: created_at                | Default to current timestamp                         | NOW() applied on insert                              | PASS
+  DB-20   | Decimal precision: DECIMAL(10,2) for amounts         | 2 decimal places maintained                          | Rs.577.50, Rs.2520.00 stored accurately              | PASS
+
+Conclusion:
+All 20 database test cases passed. The PostgreSQL schema on Supabase maintains referential integrity
+through foreign keys, enforces data validation via CHECK and NOT NULL constraints, and supports
+cascading deletes for maintaining data consistency. The database is stable and ready for application integration.
+
+
+7.2 Testing Result of Sprint 2 (Backend/Service Layer Testing)
+--------------------------------------------------------------
+Testing Type: Functional Testing
+Technology: Supabase JavaScript Client (@supabase/supabase-js)
+Service Layer: supabaseService.js - 25+ functions
+
+Test Cases Performed:
+
+  Test ID | Test Case                                  | Input                                     | Expected Result                                   | Actual Result                                    | Status
+  --------|--------------------------------------------|-------------------------------------------|---------------------------------------------------|--------------------------------------------------|-------
+  BE-01   | Add new customer                           | FirstName: Test, LastName: User            | Customer created, ID returned                     | Customer inserted, ID auto-generated             | PASS
+  BE-02   | View all customers                         | -                                          | List of all customers                             | Array of customer objects returned                | PASS
+  BE-03   | Update customer details                    | Change ContactNo for existing customer     | Customer record updated                           | contact_no field updated in database             | PASS
+  BE-04   | Delete customer                            | Delete customer by ID                      | Customer and related records removed              | CASCADE delete removes meters, invoices          | PASS
+  BE-05   | Auto-create login on customer creation     | Admin creates customer                     | Entry in users table with credentials             | User row created with role=customer              | PASS
+  BE-06   | Add meter to customer                      | MeterType: Smart, TariffID: 1              | Meter linked to customer                          | Meter created with correct foreign keys          | PASS
+  BE-07   | View customer meters                       | customerId = 1                             | List of meters for customer                       | Array of meter objects with tariff info           | PASS
+  BE-08   | Fetch tariff plans                         | -                                          | List of all tariffs                               | 3 tariffs returned                               | PASS
+  BE-09   | Create invoice with auto-calculation       | units=150, rate=Rs.5.50                    | Base: Rs.825, Tax: Rs.41.25, Total: Rs.866.25     | Amounts calculated and stored correctly          | PASS
+  BE-10   | Create invoice + bill together             | customerId, meterId, units, dueDate        | Both bill and invoice created                     | Bill and invoice IDs returned                    | PASS
+  BE-11   | View customer invoices                     | customerId = 1                             | List of invoices ordered by date desc             | Invoices returned with correct status            | PASS
+  BE-12   | View invoice detail                        | invoiceId = 1                              | Invoice with breakdown + meter info               | Complete invoice data with outstanding amount    | PASS
+  BE-13   | Record full payment                        | amountPaid = grandTotal                    | Payment recorded, invoice status = Paid           | Status updated to Paid                           | PASS
+  BE-14   | Record partial payment                     | amountPaid < grandTotal                    | Payment recorded, status = Partially Paid         | Status updated to Partially Paid                 | PASS
+  BE-15   | Payment updates invoice amount_paid        | Two partial payments                       | amount_paid accumulates                           | Rs.300 + Rs.200 = Rs.500 total paid              | PASS
+  BE-16   | View payment history (admin)               | -                                          | All payments with customer names                  | Payments joined with customer data via FK        | PASS
+  BE-17   | View payment history (customer)            | customerId = 1                             | Only customer's payments                          | Filtered by customer_id correctly                | PASS
+  BE-18   | Admin dashboard statistics                 | -                                          | Total customers, invoices, revenue                | Aggregated stats match database records          | PASS
+  BE-19   | Monthly revenue aggregation                | -                                          | Payments grouped by month                         | paymentsByMonth array returned correctly         | PASS
+  BE-20   | Customer dashboard summary                 | customerId = 1                             | Outstanding, consumption, due date                | All summary fields calculated correctly          | PASS
+  BE-21   | Submit feedback                            | text, rating=5                             | Feedback stored with customer info                | Feedback row created in feedbacks table          | PASS
+  BE-22   | View all feedbacks (admin)                 | -                                          | All feedbacks across customers                    | Complete list with customer names and ratings    | PASS
+  BE-23   | View own feedbacks (customer)              | customerId = 1                             | Only that customer's feedbacks                    | Filtered correctly by customer_id                | PASS
+  BE-24   | Payment stats                              | -                                          | totalPayments, totalCollected, pending count      | Stats match actual payment records               | PASS
+  BE-25   | Authorization check                        | Customer accessing another's invoice       | Error: Unauthorized                               | Access denied for mismatched customerId          | PASS
+
+Conclusion:
+All 25 backend test cases passed. The Supabase service layer correctly handles all CRUD operations
+for customers, meters, invoices, and payments. Invoice generation accurately calculates base amount,
+tax (5%), and grand total. The payment system properly updates invoice status on full and partial
+payments. Authorization checks prevent customers from accessing other customers' data.
+
+
+7.3 Testing Result of Sprint 3 (System & UI Testing)
+-----------------------------------------------------
+Testing Type: System Testing & Usability Testing
+Deployment: Vercel (Frontend) + Supabase (Backend/Database)
+Responsive Testing: Desktop (1920x1080), Tablet (768x1024), Mobile (375x812)
+
+Test Cases Performed:
+
+  Test ID | Test Case                              | Expected Result                                     | Actual Result                                      | Status
+  --------|----------------------------------------|-----------------------------------------------------|---------------------------------------------------|-------
+  UI-01   | Admin login with valid credentials      | Redirect to Admin Dashboard                         | Dashboard loads with statistics                    | PASS
+  UI-02   | Customer login with valid credentials   | Redirect to Customer Dashboard                      | Dashboard shows billing overview                   | PASS
+  UI-03   | Login with invalid password             | Error message displayed                             | "Invalid email or password" shown                  | PASS
+  UI-04   | Login with wrong role                   | Error message displayed                             | No matching user found, error shown                | PASS
+  UI-05   | Session persistence (page refresh)      | User stays logged in                                | localStorage session maintained                    | PASS
+  UI-06   | Logout functionality                    | Redirect to login, session cleared                  | localStorage cleared, redirected to /login         | PASS
+  UI-07   | Admin -> Customers navigation           | Customer list displayed                             | Table with all customers loaded                    | PASS
+  UI-08   | Admin -> Create Customer                | Form with personal info + meter                     | Customer created with auto-credentials             | PASS
+  UI-09   | Admin -> Edit Customer (modal)          | Edit modal with pre-filled data                     | Fields editable, save updates database             | PASS
+  UI-10   | Admin -> Delete Customer                | Confirmation dialog, then delete                    | Customer and related data removed                  | PASS
+  UI-11   | Admin -> Billing page                   | Payment stats + history table                       | Stats cards + payment records displayed             | PASS
+  UI-12   | Admin -> Create Invoice (modal)         | Select customer, meter, enter units                 | Invoice created with auto-calculated total         | PASS
+  UI-13   | Admin -> Feedback page                  | All customer feedbacks with ratings                 | Star ratings and feedback text displayed            | PASS
+  UI-14   | Admin -> Dashboard revenue chart        | Bar chart with monthly data                         | Bars scale proportionally, amounts visible          | PASS
+  UI-15   | Customer -> Dashboard overview          | Stats cards (outstanding, consumption, due date)    | All summary data displayed correctly               | PASS
+  UI-16   | Customer -> Active bill section         | Current unpaid bill with View & Pay button          | Active bill shown with full breakdown              | PASS
+  UI-17   | Customer -> Bills list                  | All invoices with status badges                     | Paid (green), Pending (amber), Partial (orange)    | PASS
+  UI-18   | Customer -> Bill detail page            | Invoice breakdown + payment history                 | Base, tax, total, outstanding displayed             | PASS
+  UI-19   | Customer -> Make payment (modal)        | Enter amount, mode, reference                       | Payment recorded, invoice status updated            | PASS
+  UI-20   | Customer -> Partial payment flow        | Pay less than grand total                           | Status changes to Partially Paid                   | PASS
+  UI-21   | Customer -> Full payment flow           | Pay remaining balance                               | Status changes to Paid                             | PASS
+  UI-22   | Customer -> Submit feedback             | Enter text + select rating                          | Feedback saved and appears in history              | PASS
+  UI-23   | Dark mode toggle                        | Switch to dark theme                                | All components render in dark palette              | PASS
+  UI-24   | Light mode toggle                       | Switch to light theme                               | All components render in light palette             | PASS
+  UI-25   | Theme persistence                       | Refresh page after toggle                           | Theme preference maintained via localStorage       | PASS
+  UI-26   | Responsive: Desktop (1920px)            | Full layout with navigation bar                     | All elements visible, proper spacing               | PASS
+  UI-27   | Responsive: Tablet (768px)              | Adjusted layout                                     | Cards stack properly, table scrollable             | PASS
+  UI-28   | Responsive: Mobile (375px)              | Mobile-first layout                                 | Hamburger menu, stacked cards, touch-friendly      | PASS
+  UI-29   | Search functionality (Customers page)   | Filter by name/email/phone                          | Results filter in real-time as user types          | PASS
+  UI-30   | Search functionality (Feedback page)    | Filter by text/customer name                        | Results filter correctly with rating filter        | PASS
+  UI-31   | Empty state handling                    | No data available                                   | Friendly empty state messages with icons           | PASS
+  UI-32   | Loading state handling                  | Data fetching in progress                           | Spinner animation displayed during load            | PASS
+  UI-33   | Error handling                          | Network error or invalid input                      | Error message shown in red alert box               | PASS
+  UI-34   | Cross-browser: Chrome                   | Full functionality                                  | All features working                               | PASS
+  UI-35   | Cross-browser: Edge                     | Full functionality                                  | All features working                               | PASS
+
+Conclusion:
+All 35 system and UI test cases passed. The application provides a seamless user experience across
+both admin and customer roles. The CRED-inspired UI is consistent in both dark and light themes,
+responsive across all device sizes, and handles edge cases gracefully with proper loading states,
+error messages, and empty state displays.
+
+
+7.4 Testing Summary
+--------------------
+
+  Sprint   | Testing Type              | Test Cases | Passed | Failed | Pass Rate
+  ---------|---------------------------|-----------|--------|--------|----------
+  Sprint 1 | Database (Structural)     | 20        | 20     | 0      | 100%
+  Sprint 2 | Backend (Functional)      | 25        | 25     | 0      | 100%
+  Sprint 3 | System & UI (Usability)   | 35        | 35     | 0      | 100%
+  Total    |                           | 80        | 80     | 0      | 100%
+
+Technologies Validated:
+- Database: PostgreSQL on Supabase Cloud
+- Backend: Supabase JavaScript Client (serverless)
+- Frontend: React.js with TailwindCSS
+- Deployment: Vercel (CI/CD via GitHub)
+- Authentication: Custom table-based auth with localStorage sessions

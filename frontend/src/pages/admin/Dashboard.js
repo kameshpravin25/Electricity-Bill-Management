@@ -79,37 +79,43 @@ export default function AdminDashboard() {
             <h2 className="section-title mb-6">Monthly Revenue</h2>
             {monthlyData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-sm text-gray-400 dark:text-white/30">
-                No revenue data yet. Create invoices and record payments to see trends.
+                No revenue data yet
               </div>
             ) : (() => {
               const maxAmount = Math.max(...monthlyData.map(([, a]) => a), 1);
-              const maxBarHeight = 180; // px
+              const chartHeight = 160;
               return (
-                <div className="flex items-end gap-4" style={{ height: `${maxBarHeight + 60}px`, paddingTop: '20px' }}>
-                  {monthlyData.map(([month, amount], idx) => {
-                    const barHeight = Math.max(Math.round((amount / maxAmount) * maxBarHeight), 16);
-                    const monthParts = month.split('-');
-                    const monthName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(monthParts[1]) - 1] || monthParts[1];
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center justify-end group" style={{ height: '100%' }}>
-                        <span className="text-[11px] font-bold text-gray-700 dark:text-white/70 mb-2">
-                          {formatCurrency(amount)}
-                        </span>
-                        <div
-                          className="w-full max-w-[52px] rounded-xl bg-gradient-to-t from-blue-600 to-blue-400 dark:from-blue-500 dark:to-blue-300 hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-400 dark:hover:to-blue-200 cursor-pointer shadow-md hover:shadow-lg transition-all duration-300"
-                          style={{ height: `${barHeight}px` }}
-                        />
-                        <div className="text-center mt-3">
-                          <div className="text-xs font-semibold text-gray-600 dark:text-white/50">{monthName}</div>
-                          <div className="text-[10px] text-gray-400 dark:text-white/20">{monthParts[0]}</div>
+                <div className="max-w-xl mx-auto">
+                  <div className="flex items-end justify-center gap-2" style={{ height: `${chartHeight}px` }}>
+                    {monthlyData.map(([month, amount], idx) => {
+                      const h = Math.max(Math.round((amount / maxAmount) * chartHeight), 12);
+                      const parts = month.split('-');
+                      const name = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(parts[1]) - 1];
+                      return (
+                        <div key={idx} className="flex flex-col items-center justify-end" style={{ height: '100%', width: '56px' }}>
+                          <span className="text-[10px] font-semibold text-gray-500 dark:text-white/50 mb-1.5">{formatCurrency(amount)}</span>
+                          <div
+                            className="w-8 rounded-lg bg-blue-500 dark:bg-blue-400 hover:bg-blue-600 dark:hover:bg-blue-300 transition-colors"
+                            style={{ height: `${h}px` }}
+                          />
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-center gap-2 mt-3 border-t border-gray-100 dark:border-white/[0.06] pt-3">
+                    {monthlyData.map(([month], idx) => {
+                      const parts = month.split('-');
+                      const name = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(parts[1]) - 1];
+                      return (
+                        <div key={idx} className="text-center" style={{ width: '56px' }}>
+                          <div className="text-[11px] font-medium text-gray-500 dark:text-white/40">{name}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })()}
-            )}
           </div>
 
           {/* Recent Payments */}
