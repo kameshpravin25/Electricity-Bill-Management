@@ -241,7 +241,7 @@ export const createFeedback = async (data) => {
 export const getAdminDashboardStats = async () => {
   const [{ data: custs }, { data: invs }, { data: pays }] = await Promise.all([
     supabase.from('customers').select('id', { count: 'exact' }),
-    supabase.from('invoices').select('*'),
+    supabase.from('invoices').select('*, customers(first_name, last_name)'),
     supabase.from('payments').select('*, customers(first_name, last_name)')
       .order('payment_date', { ascending: false })
   ]);
@@ -255,6 +255,17 @@ export const getAdminDashboardStats = async () => {
   }));
   const totalPaymentsReceived = payments.reduce((s, p) => s + p.amountPaid, 0);
   const recentPayments = payments.slice(0, 5);
+
+  const pendingBills = (invs || [])
+    .filter(i => i.status !== 'Paid')
+    .map(i => ({
+      id: i.id, invoiceDate: i.invoice_date, dueDate: i.due_date,
+      grandTotal: parseFloat(i.grand_total), amountPaid: parseFloat(i.amount_paid || 0),
+      outstanding: parseFloat(i.grand_total) - parseFloat(i.amount_paid || 0),
+      unitsConsumed: parseFloat(i.units_consumed), status: i.status,
+      customerName: i.customers ? `${i.customers.first_name} ${i.customers.last_name}` : 'N/A'
+    }))
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
   const monthMap = {};
   payments.forEach(p => {
@@ -270,7 +281,7 @@ export const getAdminDashboardStats = async () => {
       totalInvoices: (invs || []).length,
       paidInvoices, pendingInvoices, totalPaymentsReceived
     },
-    recentPayments, paymentsByMonth
+    recentPayments, paymentsByMonth, pendingBills
   };
 };
 
