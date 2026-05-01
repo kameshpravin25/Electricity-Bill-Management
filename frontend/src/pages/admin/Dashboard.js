@@ -81,33 +81,34 @@ export default function AdminDashboard() {
               <div className="h-48 flex items-center justify-center text-sm text-gray-400 dark:text-white/30">
                 No revenue data yet. Create invoices and record payments to see trends.
               </div>
-            ) : (
-              <div className="flex items-end gap-4 h-56 pt-6">
-                {monthlyData.map(([month, amount], idx) => {
-                  const maxAmount = Math.max(...monthlyData.map(([, a]) => a), 1);
-                  const heightPct = Math.max((amount / maxAmount) * 100, 8);
-                  const monthLabel = month.split('-');
-                  return (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                      <div className="relative w-full flex flex-col items-center">
-                        <span className="text-xs font-semibold text-gray-700 dark:text-white/70 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 dark:bg-white text-white dark:text-black px-2 py-1 rounded-md whitespace-nowrap">
+            ) : (() => {
+              const maxAmount = Math.max(...monthlyData.map(([, a]) => a), 1);
+              const maxBarHeight = 180; // px
+              return (
+                <div className="flex items-end gap-4" style={{ height: `${maxBarHeight + 60}px`, paddingTop: '20px' }}>
+                  {monthlyData.map(([month, amount], idx) => {
+                    const barHeight = Math.max(Math.round((amount / maxAmount) * maxBarHeight), 16);
+                    const monthParts = month.split('-');
+                    const monthName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(monthParts[1]) - 1] || monthParts[1];
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col items-center justify-end group" style={{ height: '100%' }}>
+                        <span className="text-[11px] font-bold text-gray-700 dark:text-white/70 mb-2">
                           {formatCurrency(amount)}
                         </span>
                         <div
-                          className="w-full max-w-[48px] rounded-lg bg-gradient-to-t from-blue-600 to-blue-400 dark:from-blue-500 dark:to-blue-300 transition-all duration-500 hover:from-blue-700 hover:to-blue-500 cursor-pointer shadow-sm"
-                          style={{ height: `${heightPct}%`, minHeight: '20px' }}
+                          className="w-full max-w-[52px] rounded-xl bg-gradient-to-t from-blue-600 to-blue-400 dark:from-blue-500 dark:to-blue-300 hover:from-blue-700 hover:to-blue-500 dark:hover:from-blue-400 dark:hover:to-blue-200 cursor-pointer shadow-md hover:shadow-lg transition-all duration-300"
+                          style={{ height: `${barHeight}px` }}
                         />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-[11px] font-medium text-gray-500 dark:text-white/40">
-                          {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(monthLabel[1]) - 1] || monthLabel[1]}
+                        <div className="text-center mt-3">
+                          <div className="text-xs font-semibold text-gray-600 dark:text-white/50">{monthName}</div>
+                          <div className="text-[10px] text-gray-400 dark:text-white/20">{monthParts[0]}</div>
                         </div>
-                        <div className="text-[10px] text-gray-400 dark:text-white/20">{monthLabel[0]}</div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
             )}
           </div>
 
