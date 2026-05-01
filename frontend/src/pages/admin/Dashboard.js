@@ -89,7 +89,6 @@ export default function AdminDashboard() {
                   <div className="flex items-end justify-center gap-2" style={{ height: `${chartHeight}px` }}>
                     {monthlyData.map(([month, amount], idx) => {
                       const h = Math.max(Math.round((amount / maxAmount) * chartHeight), 12);
-                      const parts = month.split('-');
                       return (
                         <div key={idx} className="flex flex-col items-center justify-end" style={{ height: '100%', width: '56px' }}>
                           <span className="text-[10px] font-semibold text-gray-500 dark:text-white/50 mb-1.5">{formatCurrency(amount)}</span>
