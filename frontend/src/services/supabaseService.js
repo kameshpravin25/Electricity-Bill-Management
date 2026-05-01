@@ -367,7 +367,7 @@ export const createPaymentWithInvoice = async ({
 // ─── CUSTOMER INVOICE DETAIL ───
 export const getCustomerInvoiceDetail = async (invoiceId, customerId) => {
   const inv = await getInvoice(invoiceId);
-  if (inv.customerId !== customerId) throw new Error('Unauthorized');
+  if (String(inv.customerId) !== String(customerId)) throw new Error('Unauthorized');
   const payments = await getInvoicePayments(invoiceId);
   const meters = await getCustomerMeters(customerId);
   const meterInfo = meters[0] || null;
