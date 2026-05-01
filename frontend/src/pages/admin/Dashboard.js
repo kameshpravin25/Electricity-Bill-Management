@@ -77,41 +77,73 @@ export default function AdminDashboard() {
 
           {/* Monthly Revenue */}
           <div className="card p-6">
-            <h2 className="section-title mb-6">Monthly Revenue</h2>
+            <h2 className="section-title mb-2">Monthly Revenue</h2>
             {monthlyData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-sm text-gray-400 dark:text-white/30">
                 No revenue data yet
               </div>
             ) : (() => {
               const maxAmount = Math.max(...monthlyData.map(([, a]) => a), 1);
-              const chartHeight = 160;
+              const W = 500, H = 180, padX = 50, padY = 20, padB = 30;
+              const chartW = W - padX, chartH = H - padY - padB;
+              const step = monthlyData.length > 1 ? chartW / (monthlyData.length - 1) : 0;
+
+              const points = monthlyData.map(([, a], i) => ({
+                x: padX + i * step,
+                y: padY + chartH - (a / maxAmount) * chartH
+              }));
+
+              const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+              const areaPath = `${linePath} L${points[points.length - 1].x},${padY + chartH} L${points[0].x},${padY + chartH} Z`;
+
+              const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+                y: padY + chartH - f * chartH,
+                label: formatCurrency(f * maxAmount)
+              }));
+
+              const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
               return (
-                <div className="max-w-xl mx-auto">
-                  <div className="flex items-end justify-center gap-2" style={{ height: `${chartHeight}px` }}>
-                    {monthlyData.map(([month, amount], idx) => {
-                      const h = Math.max(Math.round((amount / maxAmount) * chartHeight), 12);
+                <div className="w-full overflow-x-auto">
+                  <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ minWidth: '320px', maxHeight: '220px' }}>
+                    <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Grid lines */}
+                    {gridLines.map((g, i) => (
+                      <g key={i}>
+                        <line x1={padX} y1={g.y} x2={W} y2={g.y} stroke="currentColor" strokeOpacity="0.06" strokeWidth="0.5" />
+                        <text x={padX - 6} y={g.y + 3} textAnchor="end" className="fill-gray-400 dark:fill-white/30" style={{ fontSize: '8px' }}>{g.label}</text>
+                      </g>
+                    ))}
+
+                    {/* Area fill */}
+                    <path d={areaPath} fill="url(#areaGrad)" />
+
+                    {/* Line */}
+                    <path d={linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                    {/* Data points & labels */}
+                    {points.map((p, i) => {
+                      const parts = monthlyData[i][0].split('-');
+                      const mName = monthNames[parseInt(parts[1]) - 1];
                       return (
-                        <div key={idx} className="flex flex-col items-center justify-end" style={{ height: '100%', width: '56px' }}>
-                          <span className="text-[10px] font-semibold text-gray-500 dark:text-white/50 mb-1.5">{formatCurrency(amount)}</span>
-                          <div
-                            className="w-8 rounded-lg bg-blue-500 dark:bg-blue-400 hover:bg-blue-600 dark:hover:bg-blue-300 transition-colors"
-                            style={{ height: `${h}px` }}
-                          />
-                        </div>
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r="4" fill="#3b82f6" stroke="white" strokeWidth="2" />
+                          <text x={p.x} y={p.y - 10} textAnchor="middle" className="fill-gray-700 dark:fill-white/70" style={{ fontSize: '9px', fontWeight: 600 }}>
+                            {formatCurrency(monthlyData[i][1])}
+                          </text>
+                          <text x={p.x} y={H - 6} textAnchor="middle" className="fill-gray-500 dark:fill-white/40" style={{ fontSize: '9px', fontWeight: 500 }}>
+                            {mName}
+                          </text>
+                        </g>
                       );
                     })}
-                  </div>
-                  <div className="flex justify-center gap-2 mt-3 border-t border-gray-100 dark:border-white/[0.06] pt-3">
-                    {monthlyData.map(([month], idx) => {
-                      const parts = month.split('-');
-                      const name = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(parts[1]) - 1];
-                      return (
-                        <div key={idx} className="text-center" style={{ width: '56px' }}>
-                          <div className="text-[11px] font-medium text-gray-500 dark:text-white/40">{name}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  </svg>
                 </div>
               );
             })()}
