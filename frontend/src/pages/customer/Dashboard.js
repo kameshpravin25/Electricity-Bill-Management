@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCustomerDashboard, createPayment } from '../../services/supabaseService';
+import { getCustomerDashboard } from '../../services/supabaseService';
 import Layout from '../../components/Layout';
 import { RequireAuth, useAuth } from '../../auth/AuthContext';
 
@@ -12,6 +12,7 @@ export default function CustomerDashboard() {
 
   React.useEffect(() => {
     if (profile?.customerId) fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   const fetchData = async () => {

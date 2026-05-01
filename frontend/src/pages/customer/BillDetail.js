@@ -17,7 +17,8 @@ export default function BillDetail() {
 
   const id = invoiceId || billId;
 
-  React.useEffect(() => { if (profile?.customerId && id) fetchDetail(); }, [profile, id]);
+  React.useEffect(() => { if (profile?.customerId && id) fetchDetail(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, id]);
 
   const fetchDetail = async () => {
     try { setLoading(true); const d = await getCustomerInvoiceDetail(id, profile.customerId); setData(d); }

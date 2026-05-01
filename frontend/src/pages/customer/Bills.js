@@ -12,7 +12,8 @@ export default function Bills() {
   const [search, setSearch] = React.useState('');
   const [filterStatus, setFilterStatus] = React.useState('');
 
-  React.useEffect(() => { if (profile?.customerId) fetchInvoices(); }, [profile]);
+  React.useEffect(() => { if (profile?.customerId) fetchInvoices(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
 
   const fetchInvoices = async () => {
     try { setLoading(true); const data = await getCustomerInvoices(profile.customerId); setInvoices(data); }

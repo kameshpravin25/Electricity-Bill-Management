@@ -11,7 +11,8 @@ export default function CustomerFeedback() {
   const [submitting, setSubmitting] = React.useState(false);
   const [msg, setMsg] = React.useState({ type: '', text: '' });
 
-  React.useEffect(() => { if (profile?.customerId) fetchFeedbacks(); }, [profile]);
+  React.useEffect(() => { if (profile?.customerId) fetchFeedbacks(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
 
   const fetchFeedbacks = async () => {
     try { setLoading(true); const data = await getFeedbacks(profile.customerId); setFeedbacks(data); }

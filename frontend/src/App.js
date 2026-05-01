@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Login from './pages/Login';
@@ -13,7 +13,7 @@ import CustomerDashboard from './pages/customer/Dashboard';
 import Bills from './pages/customer/Bills';
 import BillDetail from './pages/customer/BillDetail';
 import Feedback from './pages/customer/Feedback';
-import Layout from './components/Layout';
+
 
 function Home() { return <Navigate to="/login" replace />; }
 
