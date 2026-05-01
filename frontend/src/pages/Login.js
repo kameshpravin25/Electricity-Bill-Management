@@ -1,55 +1,139 @@
-import React from 'react';
-import api from '../services/api';
-import { useAuth } from '../auth/AuthContext';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 export default function Login() {
-  const { setAuth } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [role, setRole] = React.useState('customer');
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState('');
+  const [role, setRole] = useState('admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!email || !password) { setError('Please fill in all fields'); return; }
     try {
-      const url = role === 'admin' ? '/auth/admin/login' : '/auth/customer/login';
-      const { data } = await api.post(url, { username, password });
-      if (data && data.token) {
-        const resolvedRole = data.role || role;
-        setAuth(data.token, resolvedRole);
-        navigate(resolvedRole === 'admin' ? '/admin' : '/customer', { replace: true });
-        return;
-      }
+      setLoading(true);
+      await login(email, password, role);
+      navigate(role === 'admin' ? '/admin' : '/customer', { replace: true });
     } catch (err) {
-      setError(err?.response?.data?.error || 'Login failed');
+      setError(err.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <form onSubmit={onSubmit} className="bg-white/80 dark:bg-white/5 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-700 p-6 md:p-8 shadow-xl">
-          <div className="flex items-center justify-center mb-6">
-            <div className="h-12 w-12 rounded-full bg-blue-600/20 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 grid place-items-center text-xl">👤</div>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a1a] flex items-center justify-center p-4">
+      {/* Background pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white dark:bg-white/[0.06] border border-gray-200 dark:border-white/[0.08] mb-4">
+            <svg className="w-7 h-7 text-gray-900 dark:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
           </div>
-          <div className="flex mb-5 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <button type="button" onClick={()=>setRole('customer')} className={`flex-1 px-4 py-2 text-sm ${role==='customer' ? 'bg-blue-600 dark:bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>Customer</button>
-            <button type="button" onClick={()=>setRole('admin')} className={`flex-1 px-4 py-2 text-sm ${role==='admin' ? 'bg-blue-600 dark:bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>Admin</button>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">E-Billing System</h1>
+          <p className="text-sm text-gray-500 dark:text-white/40 mt-1">Manage your electricity bills</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white dark:bg-[#1a1a2e] rounded-2xl border border-gray-200 dark:border-white/[0.06] p-8 shadow-xl shadow-black/5 dark:shadow-black/20">
+          {/* Role Toggle */}
+          <div className="flex bg-gray-100 dark:bg-white/[0.04] rounded-xl p-1 mb-6">
+            {['customer', 'admin'].map(r => (
+              <button
+                key={r}
+                onClick={() => setRole(r)}
+                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  role === r
+                    ? 'bg-white dark:bg-white/[0.1] text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-white/30 hover:text-gray-700 dark:hover:text-white/50'
+                }`}
+              >
+                {r === 'customer' ? 'Customer' : 'Admin'}
+              </button>
+            ))}
           </div>
-          <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">Username</label>
-          <input autoFocus value={username} onChange={(e)=>setUsername(e.target.value)} placeholder="Enter your username" className="w-full mb-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-600 text-slate-900 dark:text-slate-100" />
-          <label className="block text-sm mb-1 text-slate-700 dark:text-slate-300">Password</label>
-          <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Enter your password" className="w-full mb-4 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-600 text-slate-900 dark:text-slate-100" />
-          {error && <div className="text-red-600 dark:text-red-400 text-sm mb-3">{error}</div>}
-          <button className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-colors py-3 font-semibold text-white">Sign In</button>
-          <p className="text-xs mt-3 text-slate-600 dark:text-slate-400">Admin: admin / Admin@123 · Customers: raju / Cust1@123, suma / Cust2@123</p>
-        </form>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-white/40 uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="input-premium"
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-white/40 uppercase tracking-wider mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="input-premium pr-12"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 hover:text-gray-600 dark:hover:text-white/50 transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/8 border border-red-500/15">
+                <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-sm text-red-500">{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full btn-primary disabled:opacity-50 mt-2"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  Signing in...
+                </span>
+              ) : (
+                `Sign in as ${role === 'admin' ? 'Admin' : 'Customer'}`
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 dark:text-white/20 mt-6">
+          Electricity Bill Management System
+        </p>
       </div>
     </div>
   );
 }
-
-

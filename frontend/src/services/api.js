@@ -1,17 +1,2 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-export default api;
-
+// This file is no longer used. All API calls go through supabaseService.js
+// Kept as empty file to prevent import errors from any remaining references.

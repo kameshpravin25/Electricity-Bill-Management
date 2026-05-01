@@ -1,284 +1,103 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import api from '../../services/api';
+import { createFeedback, getFeedbacks } from '../../services/supabaseService';
 import Layout from '../../components/Layout';
-import { RequireAuth } from '../../auth/AuthContext';
+import { RequireAuth, useAuth } from '../../auth/AuthContext';
 
-export default function Feedback() {
-  const [formData, setFormData] = React.useState({
-    invoiceId: '',
-    text: '',
-    rating: 0
-  });
+export default function CustomerFeedback() {
+  const { profile } = useAuth();
   const [feedbacks, setFeedbacks] = React.useState([]);
-  const [invoices, setInvoices] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [form, setForm] = React.useState({ text: '', rating: 5 });
   const [submitting, setSubmitting] = React.useState(false);
-  const [message, setMessage] = React.useState('');
-  const [hoveredRating, setHoveredRating] = React.useState(0);
+  const [msg, setMsg] = React.useState({ type: '', text: '' });
 
-  React.useEffect(() => {
-    fetchFeedbacks();
-    fetchInvoices();
-  }, []);
+  React.useEffect(() => { if (profile?.customerId) fetchFeedbacks(); }, [profile]);
 
   const fetchFeedbacks = async () => {
-    try {
-      const response = await api.get('/customer/feedback');
-      if (response.data.success) {
-        setFeedbacks(response.data.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching feedbacks:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchInvoices = async () => {
-    try {
-      const response = await api.get('/customer/invoices');
-      if (response.data.success) {
-        setInvoices(response.data.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching invoices:', err);
-    }
+    try { setLoading(true); const data = await getFeedbacks(profile.customerId); setFeedbacks(data); }
+    catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    
-    if (!formData.text.trim()) {
-      setMessage('Please enter your feedback');
-      return;
-    }
-
-    if (formData.text.length > 500) {
-      setMessage('Feedback text cannot exceed 500 characters');
-      return;
-    }
-
-    setSubmitting(true);
+    e.preventDefault(); setMsg({ type: '', text: '' });
+    if (!form.text.trim()) { setMsg({ type: 'error', text: 'Please enter your feedback' }); return; }
     try {
-      const payload = {
-        text: formData.text.trim(),
-        rating: formData.rating > 0 ? formData.rating : null,
-        invoiceId: formData.invoiceId || null
-      };
-      await api.post('/customer/feedback', payload);
-      setMessage('Feedback submitted successfully!');
-      setFormData({ invoiceId: '', text: '', rating: 0 });
-      setHoveredRating(0);
+      setSubmitting(true);
+      await createFeedback({ customerId: profile.customerId, customerName: `${profile.firstName || ''} ${profile.lastName || ''}`.trim(), customerEmail: profile.email || '', text: form.text.trim(), rating: form.rating });
+      setMsg({ type: 'success', text: 'Feedback submitted' });
+      setForm({ text: '', rating: 5 });
       fetchFeedbacks();
-    } catch (err) {
-      setMessage(err?.response?.data?.error || 'Failed to submit feedback');
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (e) { setMsg({ type: 'error', text: e?.message || 'Failed to submit' }); }
+    finally { setSubmitting(false); }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch {
-      return dateStr;
-    }
-  };
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 
-  const formatCurrency = (amount) => {
-    if (!amount) return '₹0';
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
-  };
-
-  const renderStars = (rating, interactive = false, onRatingClick = null, onHover = null) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => interactive && onRatingClick && onRatingClick(star)}
-            onMouseEnter={() => interactive && onHover && onHover(star)}
-            onMouseLeave={() => interactive && onHover && onHover(0)}
-            className={`${
-              interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'
-            } transition-transform`}
-          >
-            <svg
-              className={`w-6 h-6 ${
-                star <= (interactive ? hoveredRating || formData.rating : rating)
-                  ? 'text-yellow-400 fill-yellow-400'
-                  : 'text-slate-500 fill-none'
-              }`}
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-              />
-            </svg>
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  if (loading) {
-  return (
-    <RequireAuth role="customer">
-      <Layout>
-          <div className="flex items-center justify-center h-64">
-            <div className="text-slate-300">Loading...</div>
-          </div>
-      </Layout>
-    </RequireAuth>
+  const renderStars = (rating, interactive = false) => (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(s => (
+        <button key={s} type="button" disabled={!interactive}
+          onClick={() => interactive && setForm({ ...form, rating: s })}
+          className={`${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform`}>
+          <svg className={`w-5 h-5 ${s <= rating ? 'text-amber-400' : 'text-gray-200 dark:text-white/10'}`} viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        </button>
+      ))}
+    </div>
   );
-}
+
+  if (loading) return (
+    <RequireAuth role="customer"><Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-3 text-gray-400 dark:text-white/30">
+          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          Loading...
+        </div>
+      </div>
+    </Layout></RequireAuth>
+  );
 
   return (
     <RequireAuth role="customer">
       <Layout>
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-100 mb-2">Feedback</h1>
-            <p className="text-slate-400">Share your feedback and rating about our service</p>
+            <h1 className="page-title">Feedback</h1>
+            <p className="page-subtitle">Share your experience with us</p>
           </div>
 
-          {/* Feedback Form */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <h2 className="text-xl font-semibold text-slate-100 mb-4">Submit Feedback</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Invoice Selection (Optional) */}
+          {/* Submit Form */}
+          <div className="card p-6">
+            <h2 className="section-title mb-5">Submit Feedback</h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">
-                  Invoice (Optional)
-                </label>
-                <select
-                  value={formData.invoiceId}
-                  onChange={(e) => setFormData({ ...formData, invoiceId: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  <option value="">-- Select Invoice (Optional) --</option>
-                  {invoices.map((inv) => (
-                    <option key={inv.invoiceId} value={inv.invoiceId}>
-                      Invoice #{inv.invoiceId} - {formatCurrency(inv.grandTotal)} ({formatDate(inv.issueDate)})
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-white/40 uppercase tracking-wider mb-3">Rating</label>
+                {renderStars(form.rating, true)}
               </div>
-
-              {/* Rating (1-5 Stars) */}
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Rating (1-5 stars)</label>
-                <div className="flex items-center gap-4">
-                  {renderStars(
-                    formData.rating,
-                    true,
-                    (rating) => setFormData({ ...formData, rating }),
-                    (rating) => setHoveredRating(rating)
-                  )}
-                  {formData.rating > 0 && (
-                    <span className="text-sm text-slate-400">
-                      {formData.rating} {formData.rating === 1 ? 'star' : 'stars'}
-                    </span>
-                  )}
-                </div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-white/40 uppercase tracking-wider mb-2">Your Feedback</label>
+                <textarea value={form.text} onChange={e => setForm({ ...form, text: e.target.value })} rows="4" required placeholder="Tell us what you think..." className="input-premium" />
               </div>
-
-              {/* Feedback Text */}
-              <div>
-                <label className="block text-sm text-slate-300 mb-2">
-                  Feedback <span className="text-slate-500">(Max 500 characters)</span>
-                </label>
-                <textarea
-                  value={formData.text}
-                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                  maxLength={500}
-                  rows={5}
-                  placeholder="Enter your feedback here..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-4 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
-                  required
-                />
-                <div className="text-xs text-slate-500 mt-1 text-right">
-                  {formData.text.length}/500 characters
-                </div>
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div
-                  className={`p-3 rounded ${
-                    message.includes('success')
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/50'
-                  }`}
-                >
-                  {message}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition"
-              >
-                {submitting ? 'Submitting...' : 'Submit Feedback'}
-              </button>
+              {msg.text && <div className={`px-4 py-3 rounded-xl text-sm ${msg.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>{msg.text}</div>}
+              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50">{submitting ? 'Submitting...' : 'Submit Feedback'}</button>
             </form>
           </div>
 
-          {/* Previous Feedbacks */}
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-            <h2 className="text-xl font-semibold text-slate-100 mb-4">Your Previous Feedbacks</h2>
+          {/* History */}
+          <div>
+            <h2 className="section-title mb-4">Your Feedbacks</h2>
             {feedbacks.length === 0 ? (
-              <div className="text-center text-slate-400 py-8">
-                No feedback submitted yet
-              </div>
+              <div className="card p-8 text-center text-sm text-gray-400 dark:text-white/30">No feedbacks submitted yet</div>
             ) : (
-              <div className="space-y-4">
-                {feedbacks.map((feedback) => (
-                  <div
-                    key={feedback.feedbackId}
-                    className="bg-slate-900 rounded-lg border border-slate-700 p-4"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          {feedback.invoiceId ? (
-                            <Link
-                              to={`/customer/invoice/${feedback.invoiceId}`}
-                              className="text-blue-400 hover:text-blue-300 font-medium"
-                            >
-                              Invoice #{feedback.invoiceId}
-                            </Link>
-                          ) : (
-                            <span className="text-slate-400 italic">General Feedback</span>
-                          )}
-                          {feedback.invoiceTotal && (
-                            <span className="text-slate-500 text-sm">
-                              ({formatCurrency(feedback.invoiceTotal)})
-                            </span>
-                          )}
-                        </div>
-                        {feedback.rating && (
-                          <div className="mb-2">
-                            {renderStars(feedback.rating)}
-                          </div>
-                        )}
-                        <p className="text-slate-300 whitespace-pre-wrap">{feedback.text}</p>
-                      </div>
-                      <div className="text-sm text-slate-400 ml-4">
-                        {formatDate(feedback.date)}
-                      </div>
+              <div className="space-y-3">
+                {feedbacks.map(f => (
+                  <div key={f.id} className="card p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      {renderStars(f.rating)}
+                      <span className="text-xs text-gray-400 dark:text-white/20">{formatDate(f.createdAt)}</span>
                     </div>
+                    <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed">{f.text}</p>
                   </div>
                 ))}
               </div>

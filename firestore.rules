@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin-only access
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Customer access check
+    function isCustomer(customerId) {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/customers_auth/$(request.auth.uid)).data.customerId == customerId;
+    }
+
+    // Admins collection - only admins can read
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // Admin records managed manually
+    }
+
+    // Customer auth mapping
+    match /customers_auth/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // Customers collection
+    match /customers/{customerId} {
+      allow read: if isAdmin() || isCustomer(customerId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Meters
+    match /meters/{meterId} {
+      allow read: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Tariffs - readable by all authenticated users
+    match /tariffs/{tariffId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Invoices
+    match /invoices/{invoiceId} {
+      allow read: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+    }
+
+    // Bills
+    match /bills/{billId} {
+      allow read: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+      allow create, update: if isAdmin();
+    }
+
+    // Payments
+    match /payments/{paymentId} {
+      allow read: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+      allow create: if request.auth != null;
+    }
+
+    // Feedbacks
+    match /feedbacks/{feedbackId} {
+      allow read: if isAdmin() || (request.auth != null && isCustomer(resource.data.customerId));
+      allow create: if request.auth != null;
+    }
+
+    // Pending auth records
+    match /customers_auth_pending/{docId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

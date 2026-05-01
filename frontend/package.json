@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "description": "Electricity Bill Management System - Frontend",
-  "proxy": "http://localhost:3000",
   "dependencies": {
     "@headlessui/react": "^1.7.19",
     "@heroicons/react": "^2.1.5",
+    "@supabase/supabase-js": "^2.45.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "axios": "^1.6.0",
     "react-router-dom": "^6.20.0"
   },
   "devDependencies": {

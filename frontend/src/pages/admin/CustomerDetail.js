@@ -1,13 +1,19 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../../services/api';
+import { getCustomer, getCustomerInvoices, getCustomerPayments, getCustomerMeters } from '../../services/supabaseService';
 import Layout from '../../components/Layout';
 import { RequireAuth } from '../../auth/AuthContext';
 
 export default function CustomerDetail() {
   const { custId } = useParams();
   const [data, setData] = React.useState({});
-  React.useEffect(()=>{ (async()=>{ try { const r = await api.get(`/admin/customer/${custId}`); setData(r.data||{});} catch(e){} })(); }, [custId]);
+  React.useEffect(()=>{ (async()=>{ try {
+    const [customer, invoices, payments, meters] = await Promise.all([
+      getCustomer(custId), getCustomerInvoices(custId),
+      getCustomerPayments(custId), getCustomerMeters(custId)
+    ]);
+    setData({ customer, invoices, payments, meters });
+  } catch(e){ console.error(e); } })(); }, [custId]);
   return (
     <RequireAuth role="admin">
       <Layout>
@@ -17,5 +23,3 @@ export default function CustomerDetail() {
     </RequireAuth>
   );
 }
-
-

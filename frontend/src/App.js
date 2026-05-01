@@ -26,6 +26,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/customer/:custId" element={<CustomerDetail />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
